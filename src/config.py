@@ -19,3 +19,4 @@ class Config:
             self.notification_settings = config.get('notification_settings')
             self.subscriptions_file = config.get('subscriptions_file')
             self.update_interval = config.get('update_interval', 24 * 60 * 60)  # 默认24小时
+            self.base_url = config.get("base_url", "")

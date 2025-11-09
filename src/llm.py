@@ -2,11 +2,14 @@ import os
 import json
 from openai import OpenAI  # 导入OpenAI库用于访问GPT模型
 from logger import LOG  # 导入日志模块
+from config import Config
+
+CONFIG = Config()
 
 class LLM:
     def __init__(self):
         # 创建一个OpenAI客户端实例
-        self.client = OpenAI()
+        self.client = OpenAI(base_url=CONFIG.base_url)
         # 从TXT文件加载提示信息
         with open("prompts/report_prompt.txt", "r", encoding='utf-8') as file:
             self.system_prompt = file.read()
