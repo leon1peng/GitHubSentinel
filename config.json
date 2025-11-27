@@ -9,6 +9,9 @@
     },
     "slack_webhook_url": "your_slack_webhook_url",
     "subscriptions_file": "subscriptions.json",
+
     "github_progress_frequency_days": 1,
-    "github_progress_execution_time":"08:00"
+    "github_progress_execution_time":"08:00",
+    "update_interval": 86400,
+    "base_url": "https://yinli.one/v1"
 }

@@ -19,7 +19,12 @@ class Config:
             self.email['password'] = os.getenv('EMAIL_PASSWORD', self.email.get('password', ''))
 
             self.subscriptions_file = config.get('subscriptions_file')
+
             # 默认每天执行
             self.freq_days = config.get('github_progress_frequency_days', 1)
             # 默认早上8点更新 (操作系统默认时区是 UTC +0，08点刚好对应北京时间凌晨12点)
             self.exec_time = config.get('github_progress_execution_time', "08:00") 
+
+            self.update_interval = config.get('update_interval', 24 * 60 * 60)  # 默认24小时
+            
+            self.base_url = config.get("base_url", "")
