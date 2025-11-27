@@ -2,5 +2,6 @@
     "langchain-ai/langchain",
     "DjangoPeng/openai-quickstart",
     "ollama/ollama",
-    "leon1peng/stable-diffusion-webui"
+    "leon1peng/stable-diffusion-webui",
+    "openai/openai-python"
 ]
