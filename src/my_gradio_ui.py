@@ -12,6 +12,7 @@ import gradio as gr
 from config import Config
 from subscription_manager import SubscriptionManager
 from github_client import GitHubClient
+from hacker_news_client import HackerNewsClient
 from report_generator import ReportGenerator
 from llm import LLM
 from logger import LOG
@@ -78,6 +79,14 @@ def generate_report(repo_name: str, days: int, repo_filepath: str):
         return "", ""
 
 
+def hackernews_generate_report(page_index: int):
+    client = HackerNewsClient()
+    top_stories_num = 30 * page_index 
+    top_stories = client.fetch_hackernews_top_stories(top_stories_num)
+    report = LLM_.hackernews_report(top_stories)
+    return report
+
+
 # === 🎨 Gradio 界面定义 ===
 # -----------------------
 # Gradio UI
@@ -90,7 +99,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="GitHub Sentinel WebUI") as demo:
         """
     )
 
-    # 页面 tag 1
+    # 页面 tag 1   =============== 📬 订阅管理 TAB ===============
     with gr.Tab("📬 订阅管理"):
         gr.Markdown("### 添加或删除订阅的 GitHub 仓库")
 
@@ -104,7 +113,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="GitHub Sentinel WebUI") as demo:
         add_btn.click(fn=add_subscription, inputs=repo_input, outputs=status_output)
         del_btn.click(fn=delete_subscription, inputs=repo_input, outputs=status_output)
 
-    # 页面 tag 2
+    # 页面 tag 2   =============== 📈 GitHub 报告 TAB ===============
     with gr.Tab("📈 生成报告"):
         gr.Markdown("### 当前订阅 & 生成报告（在同一视图操作）")
 
@@ -144,6 +153,43 @@ with gr.Blocks(theme=gr.themes.Soft(), title="GitHub Sentinel WebUI") as demo:
                 outputs=[report_md, download_file]
             )
 
+    # 页面 tag 3   =============== 📰 HackerNews 报告 TAB ===============
+    with gr.Tab("📰 HackerNews 热点分析"):
+        gr.Markdown("### 获取 HackerNews 热榜趋势并生成 AI 分析报告")
+        with gr.Row():
+            # 左侧参数区
+            with gr.Column(scale=1):
+                hn_days_slider = gr.Slider(
+                    minimum=1,
+                    maximum=7,
+                    step=1,
+                    value=2,
+                    label="时间范围（天）"
+                )
+                # 生成 AI 报告按钮
+                hn_gen_btn = gr.Button("🚀 获取并生成 HN 报告", variant="primary")
+
+                # 存储生成的文件路径
+                hn_filepath = gr.State()
+
+
+            # 右侧 AI 报告区
+            with gr.Column(scale=2):
+                hn_report_title = gr.Textbox(
+                    label="AI 分析结果",
+                    lines=1,
+                    interactive=False,
+                    value=""
+                )
+
+                hn_report_md = gr.Markdown("", elem_id="hn_report_output")
+                # hn_download = gr.File(label="下载报告")  # 暂不支持下载
+
+            hn_gen_btn.click(
+                fn=hackernews_generate_report,
+                inputs=[hn_days_slider],
+                outputs=[hn_report_md]
+            )
 
 
     gr.Markdown(
