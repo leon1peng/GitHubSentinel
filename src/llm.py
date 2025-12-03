@@ -47,3 +47,28 @@ class LLM:
             # 如果在请求过程中出现异常，记录错误并抛出
             LOG.error(f"生成报告时发生错误：{e}")
             raise
+    
+    def hackernews_report(self, content, dry_run=False):
+        with open("prompts/hackernews.txt", "r", encoding='utf-8') as file:
+            system_prompt = file.read()
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": content}
+        ]
+
+        if dry_run:
+            # 如果启用了dry_run模式，将不会调用模型，而是将提示信息保存到文件中
+            LOG.info("Dry run mode enabled. Saving prompt to file.")
+            LOG.debug("Prompt已保存到 daily_progress/prompt.txt")
+
+            return "DRY RUN"
+        
+        LOG.info("使用 GPT 模型开始生成报告。")
+
+        try:
+            response = self.client.chat.completions.create(model="gpt-4o-mini", messages=messages)
+            LOG.debug(f"GPT response: {response}")
+            return response.choices[0].message.content
+        except Exception as e:
+            LOG.error(f"生成报告时发生错误：{e}")
+            raise

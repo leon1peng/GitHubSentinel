@@ -10,6 +10,7 @@ from report_generator import ReportGenerator  # 导入报告生成器类
 from llm import LLM  # 导入语言模型类，可能用于生成报告内容
 from subscription_manager import SubscriptionManager  # 导入订阅管理器类，管理GitHub仓库订阅
 from logger import LOG  # 导入日志记录器
+from hacker_news_client import HackerNewsClient
 
 
 def graceful_shutdown(signum, frame):
@@ -30,6 +31,14 @@ def github_job(subscription_manager, github_client, report_generator, notifier, 
     LOG.info(f"[定时任务执行完毕]")
 
 
+def hackernews_job(hackernews_client: HackerNewsClient, llm: LLM, notifier: Notifier=None):
+    LOG.info("[Hacker News 开始执行定时任务]")
+    top_stories = hackernews_client.fetch_hackernews_top_stories(120)
+    report = llm.hackernews_report(top_stories)
+    print(report)
+    notifier.notify("Hacker News", report)
+
+
 def main():
     # 设置信号处理器
     signal.signal(signal.SIGTERM, graceful_shutdown)
@@ -41,6 +50,8 @@ def main():
     report_generator = ReportGenerator(llm)  # 创建报告生成器实例
     subscription_manager = SubscriptionManager(config.subscriptions_file)  # 创建订阅管理器实例
 
+    hackernews_client = HackerNewsClient()
+
     # 启动时立即执行（如不需要可注释）
     github_job(subscription_manager, github_client, report_generator, notifier, config.freq_days)
 
@@ -48,6 +59,8 @@ def main():
     schedule.every(config.freq_days).days.at(
         config.exec_time
     ).do(github_job, subscription_manager, github_client, report_generator, notifier, config.freq_days)
+
+    schedule.every(8).hours.do(hackernews_job, hackernews_client, llm)
 
     try:
         # 在守护进程中持续运行
@@ -62,3 +75,21 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # client = HackerNewsClient()
+    # llm = LLM() 
+    # hackernews_job(client, llm)
+    """
+    在Hacker News最新的技术洞察中，以下几个主题引起了广泛关注和讨论：
+
+    1. **个人项目与创作**：许多开发者在“Ask HN”中分享了自己的项目，展示了社区在自我表达和创业方面的热情。个人创作的氛围表明，越来越多的开发者选择通过自己的项目来探索和实现想法。
+
+    2. **网络安全思维转变**：关于防守者与攻击者思维的讨论显示出人们对网络安全的关注不断加深。开发者和企业都意识到，理解不同角色的思维方式是加强安全防护的关键。
+
+    3. **神经科技**：随着神经科技的进步，投资者和开发者对这一领域的应用潜力表示了浓厚的兴趣，特别是在医疗和人类增强技术方面。
+
+    4. **开源项目的崛起**：开源项目如Serpent OS和Jules引发了技术社区的瞩目，这表明开源软件在促进技术创新和协作方面的不可替代性日益显著。
+
+    5. **Rust编程语言的应用**：Rust在社区中的讨论热度持续上升，尤其是在内存安全和性能优化方面，开发者对其越来越感兴趣，表明随着技术需求的变化，Rust的应用场景也在不断拓展。
+
+    以上主题反映了技术快速发展的趋势，以及开发者社区在面对新挑战时的创新思维和解决方案。
+    """
